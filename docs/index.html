@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8"/>
+  <title>Telaio 3D + Nucleo c.a. (mesh) — Guida</title>
+  <style>
+    body { font-family: system-ui, Arial; max-width: 920px; margin: 2rem auto; line-height: 1.6; }
+    code { background:#f3f3f3; padding:.15rem .35rem; border-radius:6px; }
+    h1,h2 { margin-top: 1.6rem; }
+  </style>
+</head>
+<body>
+  <h1>Telaio 3D + Nucleo in c.a. (mesh shell) — Guida rapida</h1>
+
+  <h2>1) Crea/compila l'XLSX</h2>
+  <p>Usa il template <code>template_input_core_mesh.xlsx</code> e compila i fogli.</p>
+
+  <h2>2) Carica e modifica</h2>
+  <p>Carica l'XLSX in Streamlit e modifica le tabelle direttamente.</p>
+
+  <h2>3) Solve</h2>
+  <p>Scegli il caso di carico e premi <b>Solve ▸ Linear Static</b>.</p>
+
+  <h2>4) Scarica</h2>
+  <p>Scarica l'XLSX aggiornato con <code>results_nodal</code>, <code>results_beam_localForce</code> e <code>results_shell_forces</code>.</p>
+
+  <h2>Nota mesh shell</h2>
+  <p>Ogni shell è un quadrilatero definito da 4 nodi in ordine antiorario (CCW). La sezione è
+     <code>ElasticMembranePlateSection</code> con parametri E, nu, spessore h e densità rho.</p>
+</body>
+</html>
