@@ -11,14 +11,179 @@ from src import (
 st.set_page_config(page_title="Telaio 3D + Nucleo c.a. (mesh) — OpenSeesPy", layout="wide")
 
 st.title("Telaio 3D + Nucleo in c.a. (mesh shell) — Streamlit + OpenSeesPy")
-st.caption("Importa XLSX → modifica tabelle → Solve (OpenSeesPy) → esporta XLSX con risultati")
+st.caption("Genera parametri → modifica tabelle → Solve (OpenSeesPy) → esporta XLSX con risultati")
+
+
+def generate_nucleo(distanzeX: list, distanzeY: list, altezzeZ: list, E: float, E_shell: float, h_shell: float):
+    """Genera un nucleo 3D con pareti shell e travi."""
+    nodes = []
+    beam_elements = []
+    shell_elements = []
+    
+    x_cum = [0.0]
+    for d in distanzeX:
+        x_cum.append(x_cum[-1] + d)
+    
+    y_cum = [0.0]
+    for d in distanzeY:
+        y_cum.append(y_cum[-1] + d)
+    
+    z_cum = [0.0]
+    for h in altezzeZ:
+        z_cum.append(z_cum[-1] + h)
+    
+    node_id = 1
+    node_map = {}
+    
+    for iz, z in enumerate(z_cum):
+        for iy, y in enumerate(y_cum):
+            for ix, x in enumerate(x_cum):
+                node_map[(iz, iy, ix)] = node_id
+                nodes.append({"id": node_id, "x": x, "y": y, "z": z})
+                node_id += 1
+    
+    # Beam elements: travi e pilastri
+    beam_id = 1
+    pilastri_ids = []
+    travi_ids = []
+    
+    # Pilastri verticali
+    for ix in range(len(x_cum)):
+        for iy in range(len(y_cum)):
+            for iz in range(1, len(z_cum)):
+                n1 = node_map[(iz - 1, iy, ix)]
+                n2 = node_map[(iz, iy, ix)]
+                beam_elements.append({"id": beam_id, "n1": n1, "n2": n2, "prop": 1})
+                pilastri_ids.append(beam_id)
+                beam_id += 1
+    
+    # Travi X
+    for iz in range(1, len(z_cum)):
+        for iy in range(len(y_cum)):
+            for ix in range(len(x_cum) - 1):
+                n1 = node_map[(iz, iy, ix)]
+                n2 = node_map[(iz, iy, ix + 1)]
+                beam_elements.append({"id": beam_id, "n1": n1, "n2": n2, "prop": 1})
+                travi_ids.append(beam_id)
+                beam_id += 1
+    
+    # Travi Y
+    for iz in range(1, len(z_cum)):
+        for iy in range(len(y_cum) - 1):
+            for ix in range(len(x_cum)):
+                n1 = node_map[(iz, iy, ix)]
+                n2 = node_map[(iz, iy + 1, ix)]
+                beam_elements.append({"id": beam_id, "n1": n1, "n2": n2, "prop": 1})
+                travi_ids.append(beam_id)
+                beam_id += 1
+    
+    # Shell elements: pareti (solo perimetrali)
+    shell_id = 1
+    for iz in range(1, len(z_cum)):
+        for iy in range(len(y_cum)):
+            for ix in range(len(x_cum)):
+                # Parete X=0
+                if ix == 0:
+                    n1 = node_map[(iz, iy, ix)]
+                    n2 = node_map[(iz, iy, ix + 1)]
+                    n3 = node_map[(iz - 1, iy, ix + 1)]
+                    n4 = node_map[(iz - 1, iy, ix)]
+                    shell_elements.append({"id": shell_id, "n1": n1, "n2": n2, "n3": n3, "n4": n4, "sec": 1})
+                    shell_id += 1
+                # Parete X=max
+                if ix == len(x_cum) - 1 and ix > 0:
+                    n1 = node_map[(iz, iy, ix)]
+                    n2 = node_map[(iz, iy, ix + 1)]
+                    n3 = node_map[(iz - 1, iy, ix + 1)]
+                    n4 = node_map[(iz - 1, iy, ix)]
+                    shell_elements.append({"id": shell_id, "n1": n1, "n2": n2, "n3": n3, "n4": n4, "sec": 1})
+                    shell_id += 1
+        for ix in range(len(x_cum)):
+            for iy in range(len(y_cum)):
+                # Parete Y=0
+                if iy == 0:
+                    n1 = node_map[(iz, iy, ix)]
+                    n2 = node_map[(iz, iy + 1, ix)]
+                    n3 = node_map[(iz - 1, iy + 1, ix)]
+                    n4 = node_map[(iz - 1, iy, ix)]
+                    shell_elements.append({"id": shell_id, "n1": n1, "n2": n2, "n3": n3, "n4": n4, "sec": 1})
+                    shell_id += 1
+                # Parete Y=max
+                if iy == len(y_cum) - 1 and iy > 0:
+                    n1 = node_map[(iz, iy, ix)]
+                    n2 = node_map[(iz, iy + 1, ix)]
+                    n3 = node_map[(iz - 1, iy + 1, ix)]
+                    n4 = node_map[(iz - 1, iy, ix)]
+                    shell_elements.append({"id": shell_id, "n1": n1, "n2": n2, "n3": n3, "n4": n4, "sec": 1})
+                    shell_id += 1
+    
+    # Carichi distribuiti su travi
+    dist_loads = []
+    qz = -2.0
+    for tid in travi_ids:
+        dist_loads.append({"load_case_id": 1, "elem_id": tid, "qx0": 0.0, "qx1": 0.0, "qy0": 0.0, "qy1": 0.0, "qz0": qz, "qz1": qz})
+    dist_loads_df = pd.DataFrame(dist_loads)
+    
+    # Vincoli base
+    restraints = []
+    for ix in range(len(x_cum)):
+        for iy in range(len(y_cum)):
+            n = node_map[(0, iy, ix)]
+            restraints.append({"load_case_id": 1, "node_id": n, "ux": 1, "uy": 1, "uz": 1, "rx": 1, "ry": 1, "rz": 1})
+    restraints_df = pd.DataFrame(restraints)
+    
+    return {
+        "nodes": pd.DataFrame(nodes),
+        "beam_elements": pd.DataFrame(beam_elements),
+        "beam_properties": pd.DataFrame([{"id": 1, "name": "cls_30", "A": 0.3, "E": E, "G": E/2.4, "J": 0.045, "Iy": 0.0225, "Iz": 0.015}]),
+        "shell_elements": pd.DataFrame(shell_elements),
+        "shell_sections": pd.DataFrame([{"id": 1, "name": "parete_20", "E": E_shell, "nu": 0.2, "h": h_shell, "rho": 2.5}]),
+        "restraints": restraints_df,
+        "beam_dist_loads": dist_loads_df,
+    }
+
 
 if "sheets" not in st.session_state:
-    st.session_state.sheets = ensure_sheets({})
+    st.session_state.sheets = None
 if "results" not in st.session_state:
     st.session_state.results = None
+if "initialized" not in st.session_state:
+    st.session_state.initialized = True
 
 with st.sidebar:
+    st.header("Generatore Nucleo c.a.")
+    
+    st.subheader("Geometry")
+    lung_x_str = st.text_input("Lunghezze X (m)", "3.0, 3.0, 3.0", help="es: 3.0, 3.0, 3.0")
+    larg_y_str = st.text_input("Larghezza Y (m)", "0.3, 3.0, 0.3", help="es: 0.3, 3.0, 0.3")
+    altezze_z_str = st.text_input("Altezze Z (m)", "3.5, 3.0, 3.0", help="es: 3.5, 3.0, 3.0")
+    
+    st.subheader("Proprietà")
+    col1, col2 = st.columns(2)
+    with col1:
+        E = st.number_input("E travi (MPa)", value=30000.0)
+    with col2:
+        E_shell = st.number_input("E pareti (MPa)", value=25000.0)
+        h_shell = st.number_input("h parete (m)", value=0.2)
+    
+    if st.button("Genera Nucleo"):
+        try:
+            dx = [float(x.strip()) for x in lung_x_str.split(",") if x.strip()]
+            dy = [float(y.strip()) for y in larg_y_str.split(",") if y.strip()]
+            dz = [float(z.strip()) for z in altezze_z_str.split(",") if z.strip()]
+            
+            sheets = generate_nucleo(dx, dy, dz, E, E_shell, h_shell)
+            sheets["load_cases"] = pd.DataFrame([{"id": 1, "name": "permanente"}])
+            sheets["node_loads"] = pd.DataFrame()
+            sheets["masses"] = pd.DataFrame()
+                
+            st.session_state.sheets = ensure_sheets(sheets)
+            st.session_state.results = None
+            st.success(f"Generato: {len(sheets['nodes'])} nodi, {len(sheets['beam_elements'])} travi, {len(sheets['shell_elements'])} shell")
+        except Exception as e:
+            st.error(f"Errore: {e}")
+
+    st.divider()
     st.header("File")
     up = st.file_uploader("Carica input .xlsx", type=["xlsx"])
     if up is not None:
@@ -26,7 +191,17 @@ with st.sidebar:
         st.session_state.results = None
         st.success("XLSX caricato.")
 
-    lc_df = st.session_state.sheets.get("load_cases", pd.DataFrame())
+    if st.button("📂 Carica esempio predefinito"):
+        sheets = generate_nucleo([3.0, 3.0, 3.0], [0.3, 3.0, 0.3], [3.5, 3.0, 3.0], 30000.0, 25000.0, 0.2)
+        sheets["load_cases"] = pd.DataFrame([{"id": 1, "name": "permanente"}])
+        sheets["node_loads"] = pd.DataFrame()
+        sheets["masses"] = pd.DataFrame()
+        st.session_state.sheets = ensure_sheets(sheets)
+        st.session_state.results = None
+        st.success("Esempio caricato!")
+
+    if st.session_state.sheets is not None:
+        lc_df = st.session_state.sheets.get("load_cases", pd.DataFrame())
     if lc_df is not None and not lc_df.empty and "id" in lc_df.columns:
         lc_ids = [int(x) for x in lc_df["id"].dropna().tolist()] or [1]
     else:
@@ -39,36 +214,45 @@ with st.sidebar:
     shell_type = st.selectbox("Tipo shell", ["ShellMITC4"], index=0)
 
     if st.button("Valida modello"):
-        errs = validate_sheets(st.session_state.sheets)
-        if errs:
-            st.error("Problemi trovati:\n" + "\n".join([f"• {e}" for e in errs]))
+        if st.session_state.sheets is None:
+            st.warning("Genera o carica un modello prima.")
         else:
-            st.success("OK: input coerente.")
+            errs = validate_sheets(st.session_state.sheets)
+            if errs:
+                st.error("Problemi trovati:\n" + "\n".join([f"• {e}" for e in errs]))
+            else:
+                st.success("OK: input coerente.")
 
     if st.button("Solve ▸ Linear Static"):
-        errs = validate_sheets(st.session_state.sheets)
-        if errs:
-            st.error("Correggi prima gli errori:\n" + "\n".join([f"• {e}" for e in errs]))
+        if st.session_state.sheets is None:
+            st.warning("Genera o carica un modello prima.")
         else:
-            try:
-                st.session_state.results = solve_linear_static_frame_core_mesh(
-                    st.session_state.sheets,
-                    int(active_lc),
-                    beam_trapezoid_segments=seg,
-                    geom_transf="Linear",
-                    shell_element_type=shell_type,
-                )
-                st.success("Analisi completata.")
-            except Exception as ex:
-                st.exception(ex)
+            errs = validate_sheets(st.session_state.sheets)
+            if errs:
+                st.error("Correggi prima gli errori:\n" + "\n".join([f"• {e}" for e in errs]))
+            else:
+                try:
+                    st.session_state.results = solve_linear_static_frame_core_mesh(
+                        st.session_state.sheets,
+                        int(active_lc),
+                        beam_trapezoid_segments=seg,
+                        geom_transf="Linear",
+                        shell_element_type=shell_type,
+                    )
+                    st.success("Analisi completata.")
+                except Exception as ex:
+                    st.exception(ex)
 
     st.divider()
     st.header("Export")
-    out_sheets = st.session_state.sheets
-    if st.session_state.results is not None:
-        out_sheets = results_to_sheets(out_sheets, st.session_state.results)
-    xbytes = write_xlsx(out_sheets)
-    st.download_button("Scarica XLSX (con risultati)", data=xbytes, file_name="telaio3d_core_mesh_output.xlsx")
+    if st.session_state.sheets is not None:
+        out_sheets = st.session_state.sheets
+        if st.session_state.results is not None:
+            out_sheets = results_to_sheets(out_sheets, st.session_state.results)
+        xbytes = write_xlsx(out_sheets)
+        st.download_button("Scarica XLSX (con risultati)", data=xbytes, file_name="telaio3d_core_mesh_output.xlsx")
+    else:
+        st.warning("Genera o carica un modello prima.")
 
 
 tabs = st.tabs([
@@ -88,6 +272,9 @@ tabs = st.tabs([
 
 
 def edit_sheet(name: str, default_cols: list):
+    if st.session_state.sheets is None:
+        st.warning("Genera o carica un modello prima.")
+        return
     df = st.session_state.sheets.get(name, pd.DataFrame(columns=default_cols))
     if df is None:
         df = pd.DataFrame(columns=default_cols)
@@ -151,17 +338,20 @@ with tabs[10]:
 
 with tabs[11]:
     st.subheader("plot3d")
-    nodes = st.session_state.sheets.get("nodes", pd.DataFrame())
-    be = st.session_state.sheets.get("beam_elements", pd.DataFrame())
-    se = st.session_state.sheets.get("shell_elements", pd.DataFrame())
-
-    if nodes is None or nodes.empty:
-        st.info("Inserisci nodes.")
+    if st.session_state.sheets is None:
+        st.warning("Genera o carica un modello prima.")
     else:
-        coords = {int(r["id"]):(float(r["x"]), float(r["y"]), float(r["z"])) for _, r in nodes.iterrows() if pd.notna(r.get("id"))}
-        fig = go.Figure()
+        nodes = st.session_state.sheets.get("nodes", pd.DataFrame())
+        be = st.session_state.sheets.get("beam_elements", pd.DataFrame())
+        se = st.session_state.sheets.get("shell_elements", pd.DataFrame())
 
-        # beams
+        if nodes is None or nodes.empty:
+            st.info("Inserisci nodes.")
+        else:
+            coords = {int(r["id"]):(float(r["x"]), float(r["y"]), float(r["z"])) for _, r in nodes.iterrows() if pd.notna(r.get("id"))}
+            fig = go.Figure()
+
+            # beams
         if be is not None and not be.empty:
             for _, e in be.iterrows():
                 n1 = int(e["n1"]); n2 = int(e["n2"])
