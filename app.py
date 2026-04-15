@@ -14,8 +14,9 @@ st.title("Telaio 3D + Nucleo in c.a. (mesh shell) — Streamlit + OpenSeesPy")
 st.caption("Genera parametri → modifica tabelle → Solve (OpenSeesPy) → esporta XLSX con risultati")
 
 
-def generate_nucleo(distanzeX: list, distanzeY: list, altezzeZ: list, E: float, E_shell: float, h_shell: float):
-    """Genera un nucleo 3D con pareti shell e travi."""
+def generate_nucleo(distanzeX: list, distanzeY: list, altezzeZ: list, 
+                    posizione_nucleo: str, E: float, E_shell: float, h_shell: float):
+    """Genera un telaio 3D con nucleo a U."""
     nodes = []
     beam_elements = []
     shell_elements = []
@@ -42,7 +43,7 @@ def generate_nucleo(distanzeX: list, distanzeY: list, altezzeZ: list, E: float, 
                 nodes.append({"id": node_id, "x": x, "y": y, "z": z})
                 node_id += 1
     
-    # Beam elements: travi e pilastri
+    # Beam elements: pilastri
     beam_id = 1
     pilastri_ids = []
     travi_ids = []
@@ -77,45 +78,41 @@ def generate_nucleo(distanzeX: list, distanzeY: list, altezzeZ: list, E: float, 
                 travi_ids.append(beam_id)
                 beam_id += 1
     
-    # Shell elements: pareti (solo perimetrali)
-    shell_id = 1
+    # Shell elements: nucleo a U (inizia da beam_id per evitare conflitti)
+    shell_id = beam_id + 1
+    nx, ny = len(x_cum), len(y_cum)
+    
+    # Posizioni nucleo
+    pos_map = {
+        "sx": (0, ny // 2),
+        "dx": (nx - 1, ny // 2),
+        "centro": (nx // 2, ny // 2),
+        "sx_up": (0, 0),
+        "dx_up": (nx - 1, 0),
+        "sx_down": (0, ny - 1),
+        "dx_down": (nx - 1, ny - 1),
+    }
+    
+    base_x, base_y = pos_map.get(posizione_nucleo, (nx // 2, ny // 2))
+    
     for iz in range(1, len(z_cum)):
-        for iy in range(len(y_cum)):
-            for ix in range(len(x_cum)):
-                # Parete X=0
-                if ix == 0:
-                    n1 = node_map[(iz, iy, ix)]
-                    n2 = node_map[(iz, iy, ix + 1)]
-                    n3 = node_map[(iz - 1, iy, ix + 1)]
-                    n4 = node_map[(iz - 1, iy, ix)]
-                    shell_elements.append({"id": shell_id, "n1": n1, "n2": n2, "n3": n3, "n4": n4, "sec": 1})
-                    shell_id += 1
-                # Parete X=max
-                if ix == len(x_cum) - 1 and ix > 0:
-                    n1 = node_map[(iz, iy, ix)]
-                    n2 = node_map[(iz, iy, ix + 1)]
-                    n3 = node_map[(iz - 1, iy, ix + 1)]
-                    n4 = node_map[(iz - 1, iy, ix)]
-                    shell_elements.append({"id": shell_id, "n1": n1, "n2": n2, "n3": n3, "n4": n4, "sec": 1})
-                    shell_id += 1
-        for ix in range(len(x_cum)):
-            for iy in range(len(y_cum)):
-                # Parete Y=0
-                if iy == 0:
-                    n1 = node_map[(iz, iy, ix)]
-                    n2 = node_map[(iz, iy + 1, ix)]
-                    n3 = node_map[(iz - 1, iy + 1, ix)]
-                    n4 = node_map[(iz - 1, iy, ix)]
-                    shell_elements.append({"id": shell_id, "n1": n1, "n2": n2, "n3": n3, "n4": n4, "sec": 1})
-                    shell_id += 1
-                # Parete Y=max
-                if iy == len(y_cum) - 1 and iy > 0:
-                    n1 = node_map[(iz, iy, ix)]
-                    n2 = node_map[(iz, iy + 1, ix)]
-                    n3 = node_map[(iz - 1, iy + 1, ix)]
-                    n4 = node_map[(iz - 1, iy, ix)]
-                    shell_elements.append({"id": shell_id, "n1": n1, "n2": n2, "n3": n3, "n4": n4, "sec": 1})
-                    shell_id += 1
+        # Parete 1: verticale (asse X)
+        if base_x > 0 and base_x < nx - 1:
+            n1 = node_map[(iz, base_y, base_x)]
+            n2 = node_map[(iz, base_y, base_x + 1)]
+            n3 = node_map[(iz - 1, base_y, base_x + 1)]
+            n4 = node_map[(iz - 1, base_y, base_x)]
+            shell_elements.append({"id": shell_id, "n1": n1, "n2": n2, "n3": n3, "n4": n4, "sec": 1})
+            shell_id += 1
+        
+        # Parete 2: orizzontale (asse Y)
+        if base_y > 0 and base_y < ny - 1:
+            n1 = node_map[(iz, base_y, base_x)]
+            n2 = node_map[(iz, base_y + 1, base_x)]
+            n3 = node_map[(iz - 1, base_y + 1, base_x)]
+            n4 = node_map[(iz - 1, base_y, base_x)]
+            shell_elements.append({"id": shell_id, "n1": n1, "n2": n2, "n3": n3, "n4": n4, "sec": 1})
+            shell_id += 1
     
     # Carichi distribuiti su travi
     dist_loads = []
@@ -162,9 +159,12 @@ with st.sidebar:
     col1, col2 = st.columns(2)
     with col1:
         E = st.number_input("E travi (MPa)", value=30000.0)
+        pos_nucleo = st.selectbox("Posizione nucleo", ["sx", "dx", "centro"], help="sx=sinistra, dx=destra, centro=al centro")
     with col2:
         E_shell = st.number_input("E pareti (MPa)", value=25000.0)
         h_shell = st.number_input("h parete (m)", value=0.2)
+    
+    st.caption(f"📍 Nucleo a U in posizione: **{pos_nucleo.upper()}**")
     
     if st.button("Genera Nucleo"):
         try:
@@ -172,7 +172,7 @@ with st.sidebar:
             dy = [float(y.strip()) for y in larg_y_str.split(",") if y.strip()]
             dz = [float(z.strip()) for z in altezze_z_str.split(",") if z.strip()]
             
-            sheets = generate_nucleo(dx, dy, dz, E, E_shell, h_shell)
+            sheets = generate_nucleo(dx, dy, dz, pos_nucleo, E, E_shell, h_shell)
             sheets["load_cases"] = pd.DataFrame([{"id": 1, "name": "permanente"}])
             sheets["node_loads"] = pd.DataFrame()
             sheets["masses"] = pd.DataFrame()
@@ -192,7 +192,7 @@ with st.sidebar:
         st.success("XLSX caricato.")
 
     if st.button("📂 Carica esempio predefinito"):
-        sheets = generate_nucleo([3.0, 3.0, 3.0], [0.3, 3.0, 0.3], [3.5, 3.0, 3.0], 30000.0, 25000.0, 0.2)
+        sheets = generate_nucleo([3.0, 3.0, 3.0], [0.3, 3.0, 0.3], [3.5, 3.0, 3.0], "sx", 30000.0, 25000.0, 0.2)
         sheets["load_cases"] = pd.DataFrame([{"id": 1, "name": "permanente"}])
         sheets["node_loads"] = pd.DataFrame()
         sheets["masses"] = pd.DataFrame()
@@ -202,8 +202,10 @@ with st.sidebar:
 
     if st.session_state.sheets is not None:
         lc_df = st.session_state.sheets.get("load_cases", pd.DataFrame())
-    if lc_df is not None and not lc_df.empty and "id" in lc_df.columns:
-        lc_ids = [int(x) for x in lc_df["id"].dropna().tolist()] or [1]
+        if lc_df is not None and not lc_df.empty and "id" in lc_df.columns:
+            lc_ids = [int(x) for x in lc_df["id"].dropna().tolist()] or [1]
+        else:
+            lc_ids = [1]
     else:
         lc_ids = [1]
     active_lc = st.selectbox("Load case attivo", lc_ids, index=0)
