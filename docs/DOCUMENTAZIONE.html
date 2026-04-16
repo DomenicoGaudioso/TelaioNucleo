@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telaio 3D + Nucleo c.a. — Documentazione Tecnica</title>
+    <style>
+        :root {
+            --primary: #1a3a5c;
+            --accent: #2980b9;
+            --accent2: #27ae60;
+            --danger: #e74c3c;
+            --warn: #f39c12;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --border: #dee2e6;
+            --text: #212529;
+            --text-light: #6c757d;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        /* Hero */
+        .hero {
+            background: linear-gradient(135deg, #1a3a5c 0%, #2c5f8a 100%);
+            color: white;
+            padding: 60px 20px 80px;
+            text-align: center;
+            position: relative;
+        }
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background: var(--bg);
+            border-radius: 50% 50% 0 0;
+        }
+        .hero h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .hero .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+        .badge-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .badge-primary { background: var(--accent); color: white; }
+        .badge-success { background: var(--accent2); color: white; }
+        /* Container */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        /* ToC */
+        .toc {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            margin: -40px auto 40px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            position: relative;
+            z-index: 10;
+            max-width: 800px;
+        }
+        .toc h2 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        .toc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 8px;
+        }
+        .toc a {
+            display: block;
+            padding: 8px 15px;
+            color: var(--accent);
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+        .toc a:hover {
+            background: #eef4fa;
+            padding-left: 20px;
+        }
+        /* Sections */
+        .section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 35px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+        }
+        .section h2 {
+            color: var(--primary);
+            border-bottom: 3px solid var(--accent);
+            padding-bottom: 12px;
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+        }
+        .section h3 {
+            color: var(--primary);
+            margin: 25px 0 15px;
+            font-size: 1.2rem;
+        }
+        .section p {
+            margin-bottom: 15px;
+            color: #444;
+        }
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.92rem;
+        }
+        thead {
+            background: var(--primary);
+            color: white;
+        }
+        th {
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        tbody tr:nth-child(even) {
+            background: #f8fafc;
+        }
+        tbody tr:hover {
+            background: #eef4fa;
+        }
+        /* Formula Box */
+        .formula-box {
+            background: #f4f6f9;
+            border-left: 5px solid var(--accent);
+            padding: 20px 25px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+            font-family: 'Cambria', 'Times New Roman', serif;
+        }
+        .formula-box .formula-label {
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+        .formula-box .formula {
+            font-size: 1.1rem;
+            color: var(--primary);
+        }
+        .formula-box code {
+            background: #e3e8ed;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9rem;
+        }
+        /* Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .card {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid var(--border);
+        }
+        .card h4 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card ul {
+            margin-left: 20px;
+            color: #555;
+        }
+        .card li {
+            margin-bottom: 5px;
+        }
+        /* Info boxes */
+        .info-box {
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 5px solid;
+        }
+        .info-box.info {
+            background: #e7f3ff;
+            border-color: var(--accent);
+        }
+        .info-box.success {
+            background: #e8f8ef;
+            border-color: var(--accent2);
+        }
+        .info-box.warning {
+            background: #fff8e6;
+            border-color: var(--warn);
+        }
+        .info-box .title {
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        /* SVG styling */
+        svg text {
+            font-family: 'Segoe UI', sans-serif;
+        }
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        .footer .disclaimer {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #f4f6f9;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 1.8rem; }
+            .section { padding: 20px; }
+            .toc { margin: -30px 10px 30px; }
+        }
+        /* Lists */
+        ul, ol {
+            margin: 15px 0 15px 25px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        code {
+            background: #eef2f7;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.88rem;
+            color: #c7254e;
+        }
+        pre {
+            background: #1e2a3a;
+            color: #e0e6ed;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-size: 0.85rem;
+        }
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+    <h1>Telaio 3D + Nucleo in c.a.</h1>
+    <p class="subtitle">Modellazione strutturale 3D con telaio elastico e nucleo a pareti in calcestruzzo armato modellato come mesh di shell</p>
+    <div class="badge-row">
+        <span class="badge badge-primary">OpenSeesPy</span>
+        <span class="badge badge-primary">ShellMITC4</span>
+        <span class="badge badge-success">Linear Static Analysis</span>
+        <span class="badge badge-primary">ElasticBeamColumn 3D</span>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Table of Contents -->
+    <nav class="toc">
+        <h2>Indice Documentazione</h2>
+        <div class="toc-grid">
+            <a href="#panoramica">1. Panoramica Generale</a>
+            <a href="#funzionalita">2. Funzionalità Principali</a>
+            <a href="#input">3. Input Richiesti</a>
+            <a href="#output">4. Output Prodotti</a>
+            <a href="#normativa">5. Normativa di Riferimento</a>
+            <a href="#formule">6. Metodologia di Calcolo</a>
+            <a href="#xlsx">7. Formato File XLSX</a>
+            <a href="#esempio">8. Esempio di Utilizzo</a>
+            <a href="#test">9. Suite di Test</a>
+            <a href="#glossario">10. Glossario</a>
+        </div>
+    </nav>
+
+    <!-- 1. Panoramica -->
+    <section id="panoramica" class="section">
+        <h2>1. Panoramica Generale</h2>
+        
+        <p>
+            L'applicazione <strong>Telaio 3D + Nucleo in c.a.</strong> è uno strumento per l'analisi strutturale che consente 
+            di modellare edifici multipiano con telaio tridimensionale in cemento armato e nucleo irrigidente a pareti. 
+            Il nucleo viene modellato come mesh di elementi shell quadrilateri, mentre il telaio utilizza elementi beam 
+            tridimensionali con proprietà elastiche complete.
+        </p>
+        
+        <div class="info-box info">
+            <div class="title">&#9432; Destinazione d'uso</div>
+            <p>
+                Strumento destinato a ingegneri strutturali per la modellazione e analisi di strutture intelaiate con nuclei 
+                in calcestruzzo armato, sismoresistenti secondo le normative vigenti italiane ed europee.
+            </p>
+        </div>
+
+        <h3>Riepilogo Caratteristiche</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Caratteristica</th>
+                    <th>Descrizione</th>
+                    <th>Valore</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Modello FEM</td>
+                    <td>Dimensioni del modello</td>
+                    <td>3D (ndm=3, ndf=6)</td>
+                </tr>
+                <tr>
+                    <td>Elementi beam</td>
+                    <td>Tipo elemento trave</td>
+                    <td>elasticBeamColumn</td>
+                </tr>
+                <tr>
+                    <td>Elementi shell</td>
+                    <td>Tipo elemento parete</td>
+                    <td>ShellMITC4</td>
+                </tr>
+                <tr>
+                    <td>Sezioni shell</td>
+                    <td>Tipo sezione</td>
+                    <td>ElasticMembranePlateSection</td>
+                </tr>
+                <tr>
+                    <td>Analisi</td>
+                    <td>Tipo di analisi implementata</td>
+                    <td>Statica lineare</td>
+                </tr>
+                <tr>
+                    <td>Formato input</td>
+                    <td>File di input</td>
+                    <td>XLSX strutturato</td>
+                </tr>
+                <tr>
+                    <td>Formato output</td>
+                    <td>Risultati analisi</td>
+                    <td>XLSX con fogli risultati</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- 2. Funzionalità -->
+    <section id="funzionalita" class="section">
+        <h2>2. Funzionalità Principali</h2>
+
+        <div class="card-grid">
+            <div class="card">
+                <h4>&#128736; Generatore Automatico Nucleo</h4>
+                <ul>
+                    <li>Generazione automatica mesh 3D completa</li>
+                    <li>Configurazione geometrica personalizzabile</li>
+                    <li>Posizionamento nucleo a U (sx, dx, centro)</li>
+                    <li>Creazione nodi, beam e shell elements</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h4>&#128202; Visualizzazione 3D</h4>
+                <ul>
+                    <li>Renders 3D interattivo con Plotly</li>
+                    <li>Visualizzazione deformata</li>
+                    <li>Scala deformata regolabile</li>
+                    <li>Distingui elementi beam e shell</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h4>&#128190; Import/Export XLSX</h4>
+                <ul>
+                    <li>Import modello da file Excel</li>
+                    <li>Export risultati completi</li>
+                    <li>Template predefinito incluso</li>
+                    <li>Modifica diretta dati in tabella</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h4>&#9889; Analisi Strutturale</h4>
+                <ul>
+                    <li>Analisi statica lineare</li>
+                    <li>Carichi nodali e distribuiti</li>
+                    <li>Gestione casi di carico</li>
+                    <li>Calcolo reazioni vincolari</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Diagramma flusso analisi -->
+        <h3>Flusso di Analisi</h3>
+        <div style="background:#f8fafc; border-radius:10px; padding:20px; text-align:center;">
+            <svg viewBox="0 0 800 200" style="max-width:100%; height:auto;">
+                <!-- Background -->
+                <defs>
+                    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#2980b9;stop-opacity:0.2" />
+                        <stop offset="100%" style="stop-color:#27ae60;stop-opacity:0.2" />
+                    </linearGradient>
+                </defs>
+                
+                <!-- Box 1: Input -->
+                <rect x="10" y="70" width="120" height="60" rx="8" fill="#1a3a5c"/>
+                <text x="70" y="100" fill="white" text-anchor="middle" font-size="12" font-weight="600">Input XLSX</text>
+                <text x="70" y="115" fill="#a8d4f0" text-anchor="middle" font-size="9">nodes, beams, shells</text>
+                
+                <!-- Arrow 1 -->
+                <path d="M130 100 L170 100" stroke="#2980b9" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+                <defs><marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#2980b9"/>
+                </marker></defs>
+                
+                <!-- Box 2: Validation -->
+                <rect x="170" y="70" width="120" height="60" rx="8" fill="#f39c12"/>
+                <text x="230" y="100" fill="white" text-anchor="middle" font-size="12" font-weight="600">Validazione</text>
+                <text x="230" y="115" fill="#fff3cd" text-anchor="middle" font-size="9">schema e coerenza</text>
+                
+                <!-- Arrow 2 -->
+                <path d="M290 100 L330 100" stroke="#2980b9" stroke-width="2" fill="none" marker-end="url(#arrow2)"/>
+                <defs><marker id="arrow2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#2980b9"/>
+                </marker></defs>
+                
+                <!-- Box 3: OpenSees -->
+                <rect x="330" y="70" width="140" height="60" rx="8" fill="#27ae60"/>
+                <text x="400" y="95" fill="white" text-anchor="middle" font-size="12" font-weight="600">OpenSeesPy</text>
+                <text x="400" y="110" fill="#c8f7dc" text-anchor="middle" font-size="9">elasticBeamColumn</text>
+                <text x="400" y="122" fill="#c8f7dc" text-anchor="middle" font-size="9">ShellMITC4</text>
+                
+                <!-- Arrow 3 -->
+                <path d="M470 100 L510 100" stroke="#2980b9" stroke-width="2" fill="none" marker-end="url(#arrow3)"/>
+                <defs><marker id="arrow3" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#2980b9"/>
+                </marker></defs>
+                
+                <!-- Box 4: Analyze -->
+                <rect x="510" y="70" width="120" height="60" rx="8" fill="#8e44ad"/>
+                <text x="570" y="100" fill="white" text-anchor="middle" font-size="12" font-weight="600">Analyze</text>
+                <text x="570" y="115" fill="#e8daef" text-anchor="middle" font-size="9">Linear Static</text>
+                
+                <!-- Arrow 4 -->
+                <path d="M630 100 L670 100" stroke="#2980b9" stroke-width="2" fill="none" marker-end="url(#arrow4)"/>
+                <defs><marker id="arrow4" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#2980b9"/>
+                </marker></defs>
+                
+                <!-- Box 5: Results -->
+                <rect x="670" y="70" width="120" height="60" rx="8" fill="#e74c3c"/>
+                <text x="730" y="95" fill="white" text-anchor="middle" font-size="12" font-weight="600">Risultati</text>
+                <text x="730" y="110" fill="#fadbd8" text-anchor="middle" font-size="9">nodal, beam, shell</text>
+                <text x="730" y="122" fill="#fadbd8" text-anchor="middle" font-size="9">forces/displacements</text>
+                
+                <!-- Labels -->
+                <text x="400" y="25" fill="#1a3a5c" text-anchor="middle" font-size="14" font-weight="700">Pipeline di Analisi Strutturale</text>
+            </svg>
+        </div>
+    </section>
+
+    <!-- 3. Input -->
+    <section id="input" class="section">
+        <h2>3. Input Richiesti</h2>
+        
+        <p>I dati di input vengono organizzati in fogli Excel (XLSX). Di seguito la specifica completa di tutti i fogli richiesti e opzionali.</p>
+
+        <h3>3.1 Fogli Obbligatori</h3>
+        
+        <h4>NODES — Nodi del modello</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Colonna</th>
+                    <th>Tipo</th>
+                    <th>Descrizione</th>
+                    <th>Unità</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><code>id</code></td><td>int</td><td>Identificativo univoco nodo</td><td>—</td></tr>
+                <tr><td><code>x</code></td><td>float</td><td>Coordinata X</td><td>m</td></tr>
+                <tr><td><code>y</code></td><td>float</td><td>Coordinata Y</td><td>m</td></tr>
+                <tr><td><code>z</code></td><td>float</td><td>Coordinata Z (altezza)</td><td>m</td></tr>
+            </tbody>
+        </table>
+
+        <h4>BEAM_ELEMENTS — Elementi trave</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Colonna</th>
+                    <th>Tipo</th>
+                    <th>Descrizione</th>
+                    <th>Unità</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><code>id</code></td><td>int</td><td>Identificativo elemento</td><td>—</td></tr>
+                <tr><td><code>n1</code></td><td>int</td><td>ID nodo iniziale</td><td>—</td></tr>
+                <tr><td><code>n2</code></td><td>int</td><td>ID nodo finale</td><td>—</td></tr>
+                <tr><td><code>prop</code></td><td>int</td><td>Riferimento a beam_properties.id</td><td>—</td></tr>
+            </tbody>
+        </table>
+
+        <h4>BEAM_PROPERTIES — Proprietà elementi beam</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Colonna</th>
+                    <th>Tipo</th>
+                    <th>Descrizione</th>
+                    <th>Unità</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><code>id</code></td><td>int</td><td>Identificativo proprietà</td><td>—</td></tr>
+                <tr><td><code>name</code></td><td>string</td><td>Nome descrittivo</td><td>—</td></tr>
+                <tr><td><code>A</code></td><td>float</td><td>Area sezione trasversale</td><td>m²</td></tr>
+                <tr><td><code>E</code></td><td>float</td><td>Modulo di Young</td><td>MPa</td></tr>
+                <tr><td><code>G</code></td><td>float</td><td>Modulo di taglio</td><td>MPa</td></tr>
+                <tr><td><code>J</code></td><td>float</td><td>Momento di inerzia polare</td><td>m⁴</td></tr>
+                <tr><td><code>Iy</code></td><td>float</td><td>Momento di inerzia rispetto asse y</td><td>m⁴</td></tr>
+                <tr><td><code>Iz</code></td><td>float</td><td>Momento di inerzia rispetto asse z</td><td>m⁴</td></tr>
+            </tbody>
+        </table>
+
+        <h4>SHELL_ELEMENTS — Elementi shell (pareti nucleo)</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Colonna</th>
+                    <th>Tipo</th>
+                    <th>Descrizione</th>
+                    <th>Unità</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><code>id</code></td><td>int</td><td>Identificativo elemento</td><td>—</td></tr>
+                <tr><td><code>n1, n2, n3, n4</code></td><td>int</td><td>ID nodi in ordine antiorario (CCW)</td><td>—</td></tr>
+                <tr><td><code>sec</code></td><td>int</td><td>Riferimento a shell_sections.id</td><td>—</td></tr>
+            </tbody>
+        </table>
+
+        <h4>SHELL_SECTIONS — Proprietà sezioni shell</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Colonna</th>
+                    <th>Tipo</th>
+                    <th>Descrizione</th>
+                    <th>Unità</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><code>id</code></td><td>int</td><td>Identificativo sezione</td><td>—</td></tr>
+                <tr><td><code>name</code></td><td>string</td><td>Nome descrittivo</td><td>—</td></tr>
+                <tr><td><code>E</code></td><td>float</td><td>Modulo di Young</td><td>MPa</td></tr>
+                <tr><td><code>nu</code></td><td>float</td><td>Coefficiente di Poisson</td><td>—</td></tr>
+                <tr><td><code>h</code></td><td>float</td><td>Spessore parete</td><td>m</td></tr>
+                <tr><td><code>rho</code></td><td>float</td><td>Densità (massa volumica)</td><td>t/m³</td></tr>
+            </tbody>
+        </table>
+
+        <h4>LOAD_CASES — Casi di carico</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Colonna</th>
+                    <th>Tipo</th>
+                    <th>Descrizione</th>
+                    <th>Unità</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><code>id</code></td><td>int</td><td>Identificativo caso di carico</td><td>—</td></tr>
+                <tr><td><code>name</code></td><td>string</td><td>Nome descrittivo (es. "permanente")</td><td>—</td></tr>
+            </tbody>
+        </table>
+
+        <h4>RESTRAINTS — Vincoli nodali</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Colonna</th>
+                    <th>Tipo</th>
+                    <th>Descrizione</th>
+                    <th>Unità</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><code>load_case_id</code></td><td>int</td><td>Riferimento a load_cases.id</td><td>—</td></tr>
+                <tr><td><code>node_id</code></td><td>int</td><td>Nodo vincolato</td><td>—</td></tr>
+                <tr><td><code>ux, uy, uz</code></td><td>bool</td><td>Vincolo alla traslazione (1=bloccato)</td><td>—</td></tr>
+                <tr><td><code>rx, ry, rz</code></td><td>bool</td><td>Vincolo alla rotazione (1=bloccato)</td><td>—</td></tr>
+            </tbody>
+        </table>
+
+        <h4>NODE_LOADS — Carichi nodali</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Colonna</th>
+                    <th>Tipo</th>
+                    <th>Descrizione</th>
+                    <th>Unità</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><code>load_case_id</code></td><td>int</td><td>Riferimento a load_cases.id</td><td>—</td></tr>
+                <tr><td><code>node_id</code></td><td>int</td><td>Nodo caricato</td><td>—</td></tr>
+                <tr><td><code>fx, fy, fz</code></td><td>float</td><td>Forze nodali</td><td>kN</td></tr>
+                <tr><td><code>mx, my, mz</code></td><td>float</td><td>Momenti nodali</td><td>kNm</td></tr>
+            </tbody>
+        </table>
+
+        <h3>3.2 Fogli Opzionali</h3>
+        
+        <h4>BEAM_DIST_LOADS — Carichi distribuiti su travi</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Colonna</th>
+                    <th>Tipo</th>
+                    <th>Descrizione</th>
+                    <th>Unità</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><code>load_case_id</code></td><td>int</td><td>Riferimento a load_cases.id</td><td>—</td></tr>
+                <tr><td><code>elem_id</code></td><td>int</td><td>Elemento trave caricato</td><td>—</td></tr>
+                <tr><td><code>qx0, qx1</code></td><td>float</td><td>Carico distribuito lungo x (inizio, fine)</td><td>kN/m</td></tr>
+                <tr><td><code>qy0, qy1</code></td><td>float</td><td>Carico distribuito lungo y (inizio, fine)</td><td>kN/m</td></tr>
+                <tr><td><code>qz0, qz1</code></td><td>float</td><td>Carico distribuito lungo z (inizio, fine)</td><td>kN/m</td></tr>
+            </tbody>
+        </table>
+
+        <h4>MASSES — Masse nodali per analisi dinamica</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Colonna</th>
+                    <th>Tipo</th>
+                    <th>Descrizione</th>
+                    <th>Unità</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><code>load_case_id</code></td><td>int</td><td>Riferimento a load_cases.id</td><td>—</td></tr>
+                <tr><td><code>node_id</code></td><td>int</td><td>Nodo con massa</td><td>—</td></tr>
+                <tr><td><code>mx, my, mz</code></td><td>float</td><td>Masse nodali per direzione</td><td>t</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- 4. Output -->
+    <section id="output" class="section">
+        <h2>4. Output Prodotti</h2>
+
+        <p>L'analisi produce un file XLSX con fogli aggiuntivi contenenti i risultati. I risultati vengono aggiunti ai fogli originali.</p>
+
+        <h3>4.1 Risultati Nodali — RESULTS_NODAL</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Colonna</th>
+                    <th>Descrizione</th>
+                    <th>Unità</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><code>node_id</code></td><td>Identificativo nodo</td><td>—</td></tr>
+                <tr><td><code>ux, uy, uz</code></td><td>Spostamenti nodali</td><td>m</td></tr>
+                <tr><td><code>rx, ry, rz</code></td><td>Rotazioni nodali</td><td>rad</td></tr>
+                <tr><td><code>Fx, Fy, Fz</code></td><td>Reazioni vincolari (forze)</td><td>kN</td></tr>
+                <tr><td><code>Mx, My, Mz</code></td><td>Reazioni vincolari (momenti)</td><td>kNm</td></tr>
+            </tbody>
+        </table>
+
+        <h3>4.2 Risultati Elementi Beam — RESULTS_BEAM_LOCALFORCE</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Colonna</th>
+                    <th>Descrizione</th>
+                    <th>Unità</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><code>id</code></td><td>Identificativo elemento</td><td>—</td></tr>
+                <tr><td><code>n1, n2</code></td><td>Nodi elemento</td><td>—</td></tr>
+                <tr><td><code>Fx_i, Fy_i, Fz_i</code></td><td>Forze estremità i (locale)</td><td>kN</td></tr>
+                <tr><td><code>Mx_i, My_i, Mz_i</code></td><td>Momenti estremità i (locale)</td><td>kNm</td></tr>
+                <tr><td><code>Fx_j, Fy_j, Fz_j</code></td><td>Forze estremità j (locale)</td><td>kN</td></tr>
+                <tr><td><code>Mx_j, My_j, Mz_j</code></td><td>Momenti estremità j (locale)</td><td>kNm</td></tr>
+            </tbody>
+        </table>
+
+        <div class="info-box info">
+            <div class="title">&#9432; Sistema di riferimento locale elementi beam</div>
+            <p>
+                Per elementi elasticBeamColumn 3D, il sistema locale è definito tramite <code>geomTransf</code> con vettore <code>vecxz</code>. 
+                L'asse x locale coincide con l'asse dell'elemento, le direzioni y e z sono definite dal vettore di orientamento.
+            </p>
+        </div>
+
+        <h3>4.3 Risultati Elementi Shell — RESULTS_SHELL_FORCES</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Colonna</th>
+                    <th>Descrizione</th>
+                    <th>Unità</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><code>id</code></td><td>Identificativo elemento shell</td><td>—</td></tr>
+                <tr><td><code>n1, n2, n3, n4</code></td><td>Nodi elemento (CCW)</td><td>—</td></tr>
+                <tr><td><code>sec</code></td><td>Riferimento sezione</td><td>—</td></tr>
+                <tr><td><code>forces</code></td><td>Vettore forze nodali (serializzato)</td><td>kN, kNm</td></tr>
+            </tbody>
+        </table>
+
+        <div class="info-box warning">
+            <div class="title">&#9888; Formato forces per shell</div>
+            <p>
+                Il vettore <code>forces</code> contiene le forze nodali per ogni nodo dell'elemento shell nel sistema locale dell'elemento. 
+                Il formato è: <code>f1x f1y f1z f2x f2y f2z ... f12x f12y f12z</code> (12 gradi di libertà × 3 componenti).
+            </p>
+        </div>
+    </section>
+
+    <!-- 5. Normativa -->
+    <section id="normativa" class="section">
+        <h2>5. Normativa di Riferimento</h2>
+
+        <p>L'applicazione implementa metodologie di calcolo conformi alle seguenti normative tecniche:</p>
+
+        <div class="card-grid">
+            <div class="card">
+                <h4>&#127463;&#127480; Italia — NTC 2018</h4>
+                <ul>
+                    <li><strong>Circolare 21 gennaio 2019 n. 7 C.S.LL.PP.</strong> — Istruzioni applicative</li>
+                    <li>Cap. 4 — Costruzioni civili e industriali</li>
+                    <li>Cap. 7 — Progettazione antisismica</li>
+                    <li>Cap. 10 — Verifiche degli elementi</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h4>&#127466;&#127480; Europa — Eurocodici</h4>
+                <ul>
+                    <li><strong>EN 1992-1-1</strong> — Progettazione strutture in calcestruzzo</li>
+                    <li><strong>EN 1998-1</strong> — Progettazione antisismica</li>
+                    <li><strong>EN 1993-1-1</strong> — Strutture in acciaio (riferimento)</li>
+                    <li><strong>EN 1995-1-1</strong> — Strutture in legno (riferimento)</li>
+                </ul>
+            </div>
+        </div>
+
+        <h3>Riferimenti Tecnici Complementari</h3>
+        <ul>
+            <li><strong>OpenSees Command Language Manual</strong> — Documentazione elemento elasticBeamColumn e ShellMITC4</li>
+            <li><strong>McGuire, Gallagher, Ziemian — Matrix Structural Analysis</strong> — Fondamenti teorici</li>
+            <li><strong>Cook, Malkus, Plesha — Concepts and Applications of Finite Element Analysis</strong> — Elementi shell quadrilateri</li>
+        </ul>
+
+        <div class="info-box success">
+            <div class="title">&#10004; Materiali di default</div>
+            <p>
+                Il generatore automatico utilizza materiali tipici per calcestruzzo armato di classe C30/37:
+                <br>&#8226; <strong>E travi/pilastri:</strong> 30,000 MPa
+                <br>&#8226; <strong>E pareti:</strong> 25,000 MPa
+                <br>&#8226; <strong>Coefficiente di Poisson:</strong> ν = 0.20
+            </p>
+        </div>
+    </section>
+
+    <!-- 6. Formule -->
+    <section id="formule" class="section">
+        <h2>6. Metodologia di Calcolo</h2>
+
+        <h3>6.1 Formulazione Elemento Beam 3D</h3>
+        
+        <div class="formula-box">
+            <div class="formula-label">Equazione constitutiva elemento elasticBeamColumn</div>
+            <div class="formula">
+                {F<sub>local</sub>} = [K<sub>local</sub>] · {u<sub>local</sub>}
+            </div>
+        </div>
+
+        <p>
+            L'elemento <code>elasticBeamColumn</code> utilizza la formulazione di trave di Timoshenko con 
+            6 gradi di libertà per nodo (3 traslazioni + 3 rotazioni). La matrice di rigidezza locale 
+            include i termini di rigidezza assiale, flessionale e torsionale.
+        </p>
+
+        <div class="formula-box">
+            <div class="formula-label">Matrice di rigidezza assiale</div>
+            <div class="formula">
+                K<sub>ax</sub> = E · A / L
+            </div>
+        </div>
+
+        <div class="formula-box">
+            <div class="formula-label">Matrice di rigidezza flessionale (piano locale y-z)</div>
+            <div class="formula">
+                K<sub>flex</sub> = E · I / L · [12, -6L, -12, -6L]<br>
+                M<sub>i</sub> = (E·I/L) · (6/L·u<sub>j</sub> - 2·θ<sub>i</sub> + 4·θ<sub>j</sub>)
+            </div>
+        </div>
+
+        <h3>6.2 Formulazione Elemento Shell MITC4</h3>
+        
+        <p>
+            L'elemento <code>ShellMITC4</code> (Mixed Interpolation of Tensorial Components) è un elemento 
+            quadrilatero a 4 nodi con integrazione ridotta. Utilizza l'ipotesi di lastra di Mindlin-Reissner 
+            con gradi di libertà di membranatura e flessione disaccoppiati.
+        </p>
+
+        <div class="formula-box">
+            <div class="formula-label">Sezione ElasticMembranePlateSection</div>
+            <div class="formula">
+                [D] = (E·h³ / 12(1-ν²)) · [<br>
+                &nbsp;&nbsp;1&nbsp;&nbsp;&nbsp;&nbsp;ν&nbsp;&nbsp;&nbsp;&nbsp;0<br>
+                &nbsp;&nbsp;ν&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;&nbsp;&nbsp;&nbsp;0<br>
+                &nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;(1-ν)/2<br>]
+            </div>
+        </div>
+
+        <p>dove:</p>
+        <ul>
+            <li><code>E</code> = modulo di Young (MPa)</li>
+            <li><code>ν</code> = coefficiente di Poisson</li>
+            <li><code>h</code> = spessore della parete (m)</li>
+        </ul>
+
+        <h3>6.3 Algoritmo di Analisi Statica Lineare</h3>
+
+        <div class="formula-box">
+            <div class="formula-label">Sistema di equazioni</div>
+            <div class="formula">
+                [K] · {U} = {F}
+            </div>
+        </div>
+
+        <p>dove:</p>
+        <ul>
+            <li><code>[K]</code> = matrice di rigidezza globale della struttura</li>
+            <li><code>{U}</code> = vettore degli spostamenti nodali incogniti</li>
+            <li><code>{F}</code> = vettore dei carichi nodali equivalenti</li>
+        </ul>
+
+        <div class="info-box info">
+            <div class="title">&#9432; Parametri algoritmo di soluzione</div>
+            <p>
+                L'implementazione utilizza:<br>
+                &#8226; <strong>Sistema:</strong> BandGeneral (matrice a banda)<br>
+                &#8226; <strong>Numberer:</strong> RCM (Reverse Cuthill-McKee)<br>
+                &#8226; <strong>Constraints:</strong> Plain<br>
+                &#8226; <strong>Test:</strong> NormDispIncr con tolleranza 10⁻¹²<br>
+                &#8226; <strong>Algorithm:</strong> Linear<br>
+                &#8226; <strong>Integrator:</strong> LoadControl con incremento unitario
+            </p>
+        </div>
+
+        <h3>6.4 Discretizzazione Carichi Distribuiti</h3>
+        
+        <p>
+            Per elementi beam 3D, i carichi distribuiti variabili (trapezoidali) vengono discretizzati 
+            in segmenti uniformi equivalenti:
+        </p>
+
+        <div class="formula-box">
+            <div class="formula-label">Carico equivalente per segmento k (k = 1...n)</div>
+            <div class="formula">
+                q<sub>k</sub> = q<sub>0</sub> + (q<sub>1</sub> - q<sub>0</sub>) · (k-0.5) / n
+            </div>
+        </div>
+
+        <p>dove <code>n</code> è il numero di segmenti (parametro configurabile, default = 10).</p>
+    </section>
+
+    <!-- 7. XLSX -->
+    <section id="xlsx" class="section">
+        <h2>7. Formato File XLSX</h2>
+
+        <p>Il formato di interscambio dati è Excel (XLSX). La struttura prevede un foglio per ogni insieme di dati come descritto nella sezione Input.</p>
+
+        <h3>7.1 Template di Input</h3>
+        <p>Il file <code>template_input_core_mesh.xlsx</code> nella root del progetto contiene la struttura completa dei fogli con le colonne richieste.</p>
+
+        <h3>7.2 Schema Riassuntivo Fogli</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Foglio</th>
+                    <th>Obbligatorio</th>
+                    <th>Righe</th>
+                    <th>Note</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>nodes</td><td><span style="color:#27ae60">&#10004;</span></td><td>Una per nodo</td><td>Coordinate X, Y, Z</td></tr>
+                <tr><td>beam_elements</td><td><span style="color:#27ae60">&#10004;</span></td><td>Una per trave</td><td>Riferimento nodi e proprietà</td></tr>
+                <tr><td>beam_properties</td><td><span style="color:#27ae60">&#10004;</span></td><td>Una per tipo sezione</td><td>A, E, G, J, Iy, Iz</td></tr>
+                <tr><td>shell_elements</td><td><span style="color:#27ae60">&#10004;</span></td><td>Una per shell</td><td>4 nodi CCW + riferimento sezione</td></tr>
+                <tr><td>shell_sections</td><td><span style="color:#27ae60">&#10004;</span></td><td>Una per tipo parete</td><td>E, nu, h, rho</td></tr>
+                <tr><td>load_cases</td><td><span style="color:#27ae60">&#10004;</span></td><td>Una per caso</td><td>ID e nome</td></tr>
+                <tr><td>restraints</td><td><span style="color:#27ae60">&#10004;</span></td><td>Una per vincolo</td><td>load_case, nodo, 6 GdL</td></tr>
+                <tr><td>node_loads</td><td><span style="color:#27ae60">&#10004;</span></td><td>Una per carico</td><td>load_case, nodo, 6 componenti</td></tr>
+                <tr><td>beam_dist_loads</td><td><span style="color:#f39c12">&#9888;</span></td><td>0-N</td><td>Opzionale per carichi distribuiti</td></tr>
+                <tr><td>masses</td><td><span style="color:#f39c12">&#9888;</span></td><td>0-N</td><td>Opzionale per analisi dinamica</td></tr>
+            </tbody>
+        </table>
+
+        <h3>7.3 Esempio di Contenuto Foglio NODES</h3>
+        <pre><code>id,  x,    y,    z
+1,   0.0,  0.0,  0.0
+2,   3.0,  0.0,  0.0
+3,   3.0,  3.0,  0.0
+4,   0.0,  3.0,  0.0
+5,   0.0,  0.0,  3.5
+6,   3.0,  0.0,  3.5
+...</code></pre>
+    </section>
+
+    <!-- 8. Esempio -->
+    <section id="esempio" class="section">
+        <h2>8. Esempio di Utilizzo</h2>
+
+        <h3>8.1 Workflow Tipico</h3>
+        <ol>
+            <li><strong>Avvio applicazione:</strong> <code>streamlit run app.py</code></li>
+            <li><strong>Configurazione geometria:</strong> Impostare dimensioni telaio e nucleo nel pannello laterale</li>
+            <li><strong>Generazione modello:</strong> Cliccare "Genera Nucleo" per creare la mesh automatica</li>
+            <li><strong>Modifica parametri:</strong> Utilizzare i tab per modificare nodi, elementi, carichi</li>
+            <li><strong>Validazione:</strong> Cliccare "Valida modello" per verificare coerenza input</li>
+            <li><strong>Esecuzione analisi:</strong> Cliccare "Solve ▸ Linear Static"</li>
+            <li><strong>Visualizzazione:</strong> Esaminare risultati e deformata 3D</li>
+            <li><strong>Export:</strong> Scaricare XLSX con risultati completi</li>
+        </ol>
+
+        <h3>8.2 Configurazione di Default</h3>
+        
+        <!-- Diagramma struttura -->
+        <div style="background:#f8fafc; border-radius:10px; padding:20px; text-align:center;">
+            <svg viewBox="0 0 500 350" style="max-width:100%; height:auto;">
+                <!-- Sfondo griglia -->
+                <defs>
+                    <pattern id="grid" width="25" height="25" patternUnits="userSpaceOnUse">
+                        <path d="M 25 0 L 0 0 0 25" fill="none" stroke="#e0e0e0" stroke-width="0.5"/>
+                    </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#grid)"/>
+                
+                <!-- Pilastri -->
+                <rect x="50" y="50" width="12" height="250" fill="#4a5568"/>
+                <rect x="438" y="50" width="12" height="250" fill="#4a5568"/>
+                <rect x="50" y="290" width="12" height="10" fill="#4a5568"/>
+                <rect x="438" y="290" width="12" height="10" fill="#4a5568"/>
+                
+                <!-- Travi perimetro X -->
+                <rect x="50" y="50" width="400" height="10" fill="#718096"/>
+                <rect x="50" y="135" width="400" height="10" fill="#718096"/>
+                <rect x="50" y="220" width="400" height="10" fill="#718096"/>
+                <rect x="50" y="290" width="400" height="10" fill="#718096"/>
+                
+                <!-- Travi perimetro Y -->
+                <rect x="50" y="50" width="10" height="250" fill="#718096"/>
+                <rect x="244" y="50" width="10" height="250" fill="#718096"/>
+                <rect x="438" y="50" width="10" height="250" fill="#718096"/>
+                
+                <!-- Nucleo a U (pareti) -->
+                <rect x="100" y="60" width="8" height="230" fill="#e74c3c" opacity="0.8"/>
+                <rect x="100" y="60" width="80" height="8" fill="#e74c3c" opacity="0.8"/>
+                
+                <!-- Mesh shell nucleo -->
+                <line x1="108" y1="68" x2="180" y2="68" stroke="#c0392b" stroke-width="0.5"/>
+                <line x1="108" y1="90" x2="180" y2="90" stroke="#c0392b" stroke-width="0.5"/>
+                <line x1="108" y1="110" x2="180" y2="110" stroke="#c0392b" stroke-width="0.5"/>
+                <line x1="108" y1="130" x2="180" y2="130" stroke="#c0392b" stroke-width="0.5"/>
+                <line x1="108" y1="150" x2="180" y2="150" stroke="#c0392b" stroke-width="0.5"/>
+                <line x1="108" y1="170" x2="180" y2="170" stroke="#c0392b" stroke-width="0.5"/>
+                <line x1="108" y1="190" x2="180" y2="190" stroke="#c0392b" stroke-width="0.5"/>
+                <line x1="108" y1="210" x2="180" y2="210" stroke="#c0392b" stroke-width="0.5"/>
+                <line x1="108" y1="230" x2="180" y2="230" stroke="#c0392b" stroke-width="0.5"/>
+                <line x1="108" y1="250" x2="180" y2="250" stroke="#c0392b" stroke-width="0.5"/>
+                <line x1="108" y1="270" x2="180" y2="270" stroke="#c0392b" stroke-width="0.5"/>
+                
+                <!-- Legenda -->
+                <rect x="320" y="40" width="150" height="80" fill="white" stroke="#ddd" rx="5"/>
+                <text x="330" y="55" font-size="11" fill="#333" font-weight="600">LEGENDA</text>
+                <rect x="330" y="65" width="15" height="10" fill="#4a5568"/>
+                <text x="350" y="73" font-size="9" fill="#555">Pilastri</text>
+                <rect x="330" y="80" width="15" height="8" fill="#718096"/>
+                <text x="350" y="88" font-size="9" fill="#555">Travi</text>
+                <rect x="330" y="95" width="10" height="15" fill="#e74c3c"/>
+                <text x="345" y="105" font-size="9" fill="#555">Nucleo (shell)</text>
+                
+                <!-- Quote -->
+                <line x1="50" y1="320" x2="450" y2="320" stroke="#333" stroke-width="1"/>
+                <line x1="50" y1="315" x2="50" y2="325" stroke="#333" stroke-width="1"/>
+                <line x1="450" y1="315" x2="450" y2="325" stroke="#333" stroke-width="1"/>
+                <text x="250" y="340" font-size="11" fill="#333" text-anchor="middle">Larghezza X: 3.0 + 3.0 + 3.0 = 9.0 m</text>
+                
+                <line x1="470" y1="50" x2="470" y2="300" stroke="#333" stroke-width="1"/>
+                <line x1="465" y1="50" x2="475" y2="50" stroke="#333" stroke-width="1"/>
+                <line x1="465" y1="300" x2="475" y2="300" stroke="#333" stroke-width="1"/>
+                <text x="490" y="180" font-size="11" fill="#333" text-anchor="middle" transform="rotate(90, 490, 180)">Altezza: 3.5 + 3.0 + 3.0 = 9.5 m</text>
+                
+                <!-- Etichetta nucleo -->
+                <text x="140" y="160" font-size="10" fill="#c0392b" font-weight="600">NUCLEO</text>
+                <text x="140" y="172" font-size="9" fill="#c0392b">a U</text>
+            </svg>
+        </div>
+
+        <h3>8.3 Parametri di Default</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Parametro</th>
+                    <th>Valore Default</th>
+                    <th>Descrizione</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Lunghezze X</td><td>3.0, 3.0, 3.0 m</td><td>Distanzequadri campate asse X</td></tr>
+                <tr><td>Larghezze Y</td><td>0.3, 3.0, 0.3 m</td><td>Distanzequadri campate asse Y</td></tr>
+                <tr><td>Altezze Z</td><td>3.5, 3.0, 3.0 m</td><td>Piani edificio</td></tr>
+                <tr><td>E travi</td><td>30,000 MPa</td><td>Modulo elastico calcestruzzo</td></tr>
+                <tr><td>E pareti</td><td>25,000 MPa</td><td>Modulo elastico nucleo</td></tr>
+                <tr><td>Spessore parete</td><td>0.20 m</td><td>Spessore nucleo</td></tr>
+                <tr><td>Posizione nucleo</td><td>sx</td><td>Sinistra, destra o centro</td></tr>
+                <tr><td>Segmenti trapezio</td><td>10</td><td>Discretizzazione carichi</td></tr>
+                <tr><td>Shell type</td><td>ShellMITC4</td><td>Tipo elemento shell</td></tr>
+            </tbody>
+        </table>
+
+        <h3>8.4 Visualizzazione Risultati</h3>
+        <p>
+            La scheda <strong>plot3d</strong> consente la visualizzazione interattiva del modello 3D con:
+        </p>
+        <ul>
+            <li>Elementi beam in grigio scuro</li>
+            <li>Elementi shell (nucleo) in grigio chiaro</li>
+            <li>Deformata sovrapposta in blu (scala regolabile 0-500x)</li>
+            <li>Navigazione rotazione/zoom/pan con mouse</li>
+        </ul>
+    </section>
+
+    <!-- 9. Test -->
+    <section id="test" class="section">
+        <h2>9. Suite di Test</h2>
+
+        <p>Il progetto include una suite di test per validare il solver. I test utilizzano il framework pytest.</p>
+
+        <h3>9.1 Test Implementati</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Test</th>
+                    <th>Descrizione</th>
+                    <th>Verifica</th>
+                    <th>Stato</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>test_minimal_frame_plus_one_shell_runs</code></td>
+                    <td>Modello minimo: 1 beam + 1 shell quadrilatera piana</td>
+                    <td>L'analisi converge e produce spostamento negativo in uy</td>
+                    <td><span style="background:#27ae60; color:white; padding:3px 10px; border-radius:12px; font-size:0.8em;">ATTIVO</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>9.2 Esecuzione Test</h3>
+        <pre><code>cd C:/.opencode/TelaioNucleo
+python -m pytest tests/ -v</code></pre>
+
+        <h3>9.3 Copertura Funzionale</h3>
+        <div style="background:#f4f6f9; border-radius:8px; padding:20px; margin:15px 0;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <span>Test copertura</span>
+                <span>Modello minimo</span>
+            </div>
+            <div style="background:#ddd; border-radius:5px; height:25px; width:100%;">
+                <div style="background:#27ae60; height:100%; width:25%; border-radius:5px; display:flex; align-items:center; justify-content:center; color:white; font-size:0.85rem;">
+                    ~25%
+                </div>
+            </div>
+            <p style="margin-top:10px; font-size:0.85rem; color:#666;">
+                La copertura è limitata al modello minimo. Test aggiuntivi per carichi distribuiti, 
+                mesh complesse, e casi limite sono suggeriti per completare la validazione.
+            </p>
+        </div>
+    </section>
+
+    <!-- 10. Glossario -->
+    <section id="glossario" class="section">
+        <h2>10. Glossario</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Termine</th>
+                    <th>English</th>
+                    <th>Definizione</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>NdM</strong></td><td>Degrees of Model</td><td>Dimensioni spaziali del modello FEM (3D = 3)</td></tr>
+                <tr><td><strong>NdF</strong></td><td>Degrees of Freedom</td><td>Gradi di libertà per nodo (6 per beam 3D)</td></tr>
+                <tr><td><strong>ElasticBeamColumn</strong></td><td>Elastic Beam-Column</td><td>Elemento finito beam elastico 3D a 2 nodi</td></tr>
+                <tr><td><strong>ShellMITC4</strong></td><td>MITC4 Shell</td><td>Elemento shell quadrilatero a 4 nodi con integrazione ridotta</td></tr>
+                <tr><td><strong>ElasticMembranePlateSection</strong></td><td>Elastic Plate Section</td><td>Sezione isotopa per elementi shell (E, ν, h, ρ)</td></tr>
+                <tr><td><strong>geomTransf</strong></td><td>Geometric Transformation</td><td>Trasformazione per orientamento sistema locale beam</td></tr>
+                <tr><td><strong>vecxz</strong></td><td>Orientation Vector</td><td>Vettore per definire piano locale x-z dell'elemento beam</td></tr>
+                <tr><td><strong>RCM</strong></td><td>Reverse Cuthill-McKee</td><td>Algoritmo di riordino nodi per ottimizzare larghezza banda</td></tr>
+                <tr><td><strong>CCW</strong></td><td>Counter-ClockWise</td><td>Ordine antiorario nodi elemento shell</td></tr>
+                <tr><td><strong>BandGeneral</strong></td><td>Band General Solver</td><td>Solutore per matrici sparse a banda</td></tr>
+                <tr><td><strong>LoadControl</strong></td><td>Load Control Integrator</td><td>Integratore a controllo di carico per analisi statica</td></tr>
+                <tr><td><strong>NormDispIncr</strong></td><td>Norm Displacement Increment</td><td>Criterio di convergenza su norma spostamenti</td></tr>
+                <tr><td><strong>Timoshenko</strong></td><td>Timoshenko Beam Theory</td><td>Teoria di trave che include deformabilità a taglio</td></tr>
+                <tr><td><strong>Mindlin-Reissner</strong></td><td>Mindlin-Reissner Plate Theory</td><td>Teoria di piastra che include deformabilità a taglio</td></tr>
+            </tbody>
+        </table>
+    </section>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+    <div class="disclaimer">
+        <p><strong>Disclaimer Tecnico</strong></p>
+        <p>
+            L'applicazione Telaio 3D + Nucleo in c.a. è uno strumento di calcolo professionale destinato 
+            all'uso da parte di ingegneri strutturali qualificati. I risultati prodotti devono essere verificati 
+            e interpretati alla luce delle normative vigenti e del giudizio professionale. L'autore non assume 
+            alcuna responsabilità per l'uso improprio o errato dei risultati ottenuti.
+        </p>
+        <p style="margin-top:10px; font-size:0.8rem;">
+            Riferimento: NTC 2018 (D.M. 17/01/2018) · Circolare 21/01/2019 n. 7 C.S.LL.PP. · EN 1992-1-1:2004 · EN 1998-1:2004
+        </p>
+    </div>
+    <p style="margin-top:20px; color:#999;">
+        TelaioNucleo Documentation · Generated for civilbox workflow
+    </p>
+</div>
+
+</body>
+</html>
